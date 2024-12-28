@@ -1,6 +1,6 @@
 from django.db import models
 
-from ..accounts.models import acc_data_desc_dir_path
+from content.models import acc_data_desc_dir_path
 from django.contrib.gis.db import models as gis_models
 
 class Location(models.Model):

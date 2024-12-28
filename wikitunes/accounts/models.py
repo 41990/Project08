@@ -1,21 +1,56 @@
 from datetime import datetime
+import uuid
 from django.db import models
 from django.contrib.auth.models import User, AbstractUser
 from django.contrib.auth.hashers import make_password, check_password
-from ..content.models import img_dir_path, text_dir_path
+from django.core.exceptions import ValidationError
+from django.conf import settings
 
-from ..tunes.models import dynamic_dir_path
+
+def dynamic_dir_path(instance, filename, folder):
+    """
+    Generate dynamic file path based on the instance attributes.
+    
+    Parameters:
+        instance: Model instance where the file is being uploaded.
+        filename: Original file name.
+        folder: The subdirectory for the file (e.g., 'images', 'videos').
+
+    Returns:
+        str: Dynamically constructed file path.
+    """
+    ext = filename.split('.')[-1]
+    
+    # Generate a new file name with a timestamp to avoid overwrites
+    new_filename = f"{uuid.uuid4().hex}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
+    
+    if hasattr(instance, 'account') and instance.account:
+        return f"account_{instance.account.id}/{folder}/{datetime.now().strftime('%Y/%m/%d')}/{new_filename}"
+    
+    if hasattr(instance, 'user') and instance.user:
+        return f"user_{instance.user.id}/{folder}/{datetime.now().strftime('%Y/%m/%d')}/{new_filename}"
+    
+    return f"uploads/others/{folder}/{datetime.now().strftime('%Y/%m/%d')}/{new_filename}"
+
+def img_dir_path(instance, filename):
+    
+    folder = 'images'
+    
+    return dynamic_dir_path(instance, filename, folder)
+
+def text_dir_path(instance, filename):
+    
+    folder = 'messages'
+    
+    return dynamic_dir_path(instance, filename, folder)
+
+def validate_file_size(file):
+    if file.size > settings.MAX_UPLOAD_SIZE:
+        raise ValidationError(f"The file size exceeds the maximum limit of {settings.MAX_UPLOAD_SIZE / (1024 * 1024)} MB.")
 
 def roles_dir_path(instance, filename):
     return f"roles/docs/{datetime.now().strftime('%Y/%m/%d')}/{filename}"
 
-def acc_data_desc_dir_path(instance, filename):
-    
-    return dynamic_dir_path(instance, filename, 'posts')
-
-def user_comment_dir_path(instance, filename):
-    
-    return dynamic_dir_path(instance, filename, 'comments')
 
 class CustomUser(AbstractUser):
     """
@@ -38,6 +73,7 @@ class Account(models.Model):
     account_location = models.CharField(max_length=50, help_text="Physical location associated with the account.")
     profile_picture = models.ImageField(
         upload_to=img_dir_path,
+        validators=[validate_file_size],
         height_field="height",
         width_field="width",
         help_text="File containing uploaded profile image."

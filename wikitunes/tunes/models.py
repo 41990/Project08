@@ -2,37 +2,10 @@ from datetime import datetime
 import uuid
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
-from ..accounts.models import Account, CustomUser
-
-from ..forums.models import Post, average_items, count_items, Comment
+from accounts.models import Account, CustomUser
 
 def privilege_dir_path(instance, filename):
     return f"privileges/docs/{datetime.now().strftime('%Y/%m/%d')}/{filename}"
-
-def reactions_dir_path(instance, filename):
-    return f"site/reactions/{datetime.now().strftime('%Y/%m/%d')}/{filename}"
-
-class ReactionMixin:
-    def num_reactions(self):
-        try:
-            return count_items(self.reaction_field, self, SiteReaction)
-        except Exception as e:
-            # Log the error or return a default value
-            return 0
-
-    def ave_ratings(self):
-        try:
-            return average_items(self.reaction_field, self, SiteReaction, 'num_star')
-        except Exception as e:
-            # Log the error or return a default value
-            return 0
-
-    def num_comments(self):
-        try:
-            return count_items(self.comment_field, self, Comment)
-        except Exception as e:
-            # Log the error or return a default value
-            return 0
 
 def dynamic_dir_path(instance, filename, folder):
     """
@@ -58,6 +31,7 @@ def dynamic_dir_path(instance, filename, folder):
         return f"user_{instance.user.id}/{folder}/{datetime.now().strftime('%Y/%m/%d')}/{new_filename}"
     
     return f"uploads/others/{folder}/{datetime.now().strftime('%Y/%m/%d')}/{new_filename}"
+
 
 class BaseModel(models.Model):
     is_valid = models.BooleanField(default=True, help_text="Indicates if the object is valid.")
@@ -133,43 +107,3 @@ class Privilege(BaseModel):
     def __str__(self):
         return f"privilege for {self.owner}"
     
-class SiteReaction(models.Model):
-    """
-    Represents a reaction to a post/comment, by a custom user.
-    """
-    message = models.FileField(upload_to=reactions_dir_path, help_text="File containing message associated to reaction")
-    user  = models.ForeignKey(
-        CustomUser,
-        on_delete = models.CASCADE,
-        help_text="User who makes the reaction"
-    )
-    post = models.ForeignKey(
-        Post,
-        on_delete = models.CASCADE,
-        help_text="Associated post for the reaction."
-    )
-    comment = models.OneToOneField(
-        Comment,
-        on_delete = models.CASCADE,
-        help_text="Associated comment for the reaction."
-    )
-    ONE_STAR = 1
-    TWO_STAR = 2
-    THREE_STAR = 3
-    FOUR_STAR = 4
-    FIVE_STAR = 5
-    STAR_CATEGORY={
-        ONE_STAR:'Very bad post/comment',
-        TWO_STAR:'Bad post/comment',
-        THREE_STAR:'Good post/comment',
-        FOUR_STAR:'Impressive post/comment',
-        FIVE_STAR:'Outstanding post/comment'
-    }
-    num_star = models.IntegerField(
-        choices=STAR_CATEGORY,
-        default=1,
-        help_text="Number of stars for reaction."
-    )
-    
-    def __str__(self):
-        return f"Reaction to {self.post.title if self.post else self.comment.user.username} by {self.user.username}"

@@ -1,14 +1,86 @@
+from datetime import datetime
+import uuid
 from django.db import models
-
-from ..forums.models import Post, Comment
+from django.core.exceptions import ValidationError
+from django.db.models import Avg
+from django.conf import settings
 from django.utils.text import slugify
-from ..tunes.models import BaseModel, dynamic_dir_path
 
-def img_dir_path(instance, filename):
+from accounts.models import Account, CustomUser, img_dir_path, text_dir_path
+
+
+def dynamic_dir_path(instance, filename, folder):
+    """
+    Generate dynamic file path based on the instance attributes.
     
-    folder = 'images'
+    Parameters:
+        instance: Model instance where the file is being uploaded.
+        filename: Original file name.
+        folder: The subdirectory for the file (e.g., 'images', 'videos').
+
+    Returns:
+        str: Dynamically constructed file path.
+    """
+    ext = filename.split('.')[-1]
     
-    return dynamic_dir_path(instance, filename, folder)
+    # Generate a new file name with a timestamp to avoid overwrites
+    new_filename = f"{uuid.uuid4().hex}_{datetime.now().strftime('%Y%m%d%H%M%S')}.{ext}"
+    
+    if hasattr(instance, 'account') and instance.account:
+        return f"account_{instance.account.id}/{folder}/{datetime.now().strftime('%Y/%m/%d')}/{new_filename}"
+    
+    if hasattr(instance, 'user') and instance.user:
+        return f"user_{instance.user.id}/{folder}/{datetime.now().strftime('%Y/%m/%d')}/{new_filename}"
+    
+    return f"uploads/others/{folder}/{datetime.now().strftime('%Y/%m/%d')}/{new_filename}"
+
+
+def count_items(filter_key, filter_value, class_variable):
+    """
+    Counts filtered items of a given instance.
+    
+    Parameters:
+        filter_key (str): The field name to filter on.
+        filter_value: The value to filter the field by.
+        class_variable: Model class which defines the item instances being counted
+
+    Returns:
+        int: The number of filtered items.
+    """
+    try:
+        filtered_items = class_variable.objects.filter(**{filter_key: filter_value})
+        return filtered_items.count()
+    except Exception as e:
+        # Log the error or return a default value
+        return 0
+    
+def average_items(filter_key, filter_value, class_variable, field_name):
+    """
+    Calculates the average of a given distribution of filtered items.
+    
+    Parameters:
+        filter_key (str): The field name to filter on.
+        filter_value: The value to filter the field by.
+        class_variable: Model class which defines the item instances being counted.
+        field_name (str): The name of the field to calculate the average for.
+
+    Returns:
+        float: The average value of the filtered field.
+    """
+    try:
+        filtered_items = class_variable.objects.filter(**{filter_key: filter_value})
+        return filtered_items.aggregate(Avg(field_name))[f"{field_name}__avg"] or 0
+    except Exception as e:
+        # Log the error or return a default value
+        return 0
+
+def reactions_dir_path(instance, filename):
+    return f"site/reactions/{datetime.now().strftime('%Y/%m/%d')}/{filename}"
+
+def validate_file_size(file):
+    if file.size > settings.MAX_UPLOAD_SIZE:
+        raise ValidationError(f"The file size exceeds the maximum limit of {settings.MAX_UPLOAD_SIZE / (1024 * 1024)} MB.")
+
 
 def video_dir_path(instance, filename):
     
@@ -22,12 +94,126 @@ def audio_dir_path(instance, filename):
     folder = 'audios'
     
     return dynamic_dir_path(instance, filename, folder)
+
+def acc_data_desc_dir_path(instance, filename):
     
-def text_dir_path(instance, filename):
+    return dynamic_dir_path(instance, filename, 'posts')
+
+def user_comment_dir_path(instance, filename):
     
-    folder = 'messages'
+    return dynamic_dir_path(instance, filename, 'comments')   
+
+CATEGORY_CHOICES = [
+    ('CAT_0','Choose'),
+    ('CAT_1','Category 1'),
+    ('CAT_2','Category 2'),
+    ('CAT_3','Category 3'),
+    ('CAT_4','Category 4'),
+    ('CAT_5','Category 5'),
+    ('CAT_6','Category 6')
+]
+
+class BaseModel(models.Model):
+    is_valid = models.BooleanField(default=True, help_text="Indicates if the object is valid.")
     
-    return dynamic_dir_path(instance, filename, folder)
+    class Meta:
+        abstract = True
+        
+        
+class ReactionMixin:
+    def num_reactions(self):
+        try:
+            return count_items(self.reaction_field, self, SiteReaction)
+        except Exception as e:
+            # Log the error or return a default value
+            return 0
+
+    def ave_ratings(self):
+        try:
+            return average_items(self.reaction_field, self, SiteReaction, 'num_star')
+        except Exception as e:
+            # Log the error or return a default value
+            return 0
+
+    def num_comments(self):
+        try:
+            return count_items(self.comment_field, self, Comment)
+        except Exception as e:
+            # Log the error or return a default value
+            return 0
+
+
+
+class Post(BaseModel, ReactionMixin):
+    """
+    Represents a post associated with an account, containing categories and ratings.
+    """
+    reaction_field = 'post'
+    comment_field = 'post'
+    
+    title = models.CharField(max_length=50, help_text="Title of the post.")
+    description = models.FileField(upload_to=acc_data_desc_dir_path, help_text="File describing the post content.")
+    category = models.CharField(
+        max_length=10, 
+        choices=CATEGORY_CHOICES,
+        default='CAT_0',
+        help_text="Post category."
+    )
+    pub_date = models.DateTimeField(auto_now=True, help_text="Date when the post was published.")
+    current_date = models.DateField(auto_now=True, help_text="Last updated date.")
+    account = models.ForeignKey(
+        Account,
+        on_delete = models.CASCADE,
+        help_text="Associated account for the post."
+    )
+    tags = models.ManyToManyField('Tag', related_name='posts')
+    
+    class Meta:
+        ordering = ['-pub_date']
+    
+    def __str__(self):
+        return f"Post Title: {self.title}"
+
+
+class Comment(BaseModel, ReactionMixin):
+    """
+    Represents a comment on a post, including its rating and validation status.
+    """
+    reaction_field = 'comment'
+    comment_field = 'parent_comment'
+    
+    message = models.FileField(upload_to=user_comment_dir_path, help_text="Content of the comment.")
+    pub_date = models.DateTimeField(auto_now=True, help_text="Date when the comment was published.")
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete = models.CASCADE,
+        help_text="User who made the comment."
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete = models.CASCADE,
+        null=True, 
+        blank=True,
+        help_text="Associated post for the comment."
+    )
+    parent_comment = models.ForeignKey(
+        'self', 
+        null=True, 
+        blank=True, 
+        on_delete=models.CASCADE, 
+        related_name='replies', 
+        help_text="The parent comment, if this comment is a reply."
+    )
+    tags = models.ManyToManyField('Tag', related_name='comments')
+    
+    def __str__(self):
+        return f"Comment on {self.post.title if self.post else self.parent_comment.user.username} by {self.user.username}"
+        
+    def save(self, *args, **kwargs):
+        if self.parent_comment == self:
+            raise ValueError("A comment cannot reply to itself.")
+        super().save(*args, **kwargs)
+
 
 class Media(BaseModel):
     """
@@ -70,6 +256,7 @@ class Image(Media):
         upload_to=img_dir_path,
         height_field="height",
         width_field="width",
+        validators=[validate_file_size],
         help_text="File containing uploaded image."
     )
     height = models.PositiveIntegerField(null=True, help_text="height of image in pixel/cm/mm.")
@@ -99,6 +286,7 @@ class Video(Media):
     )
     upload = models.FileField(
         upload_to=video_dir_path,
+        validators=[validate_file_size],
         help_text="File containing uploaded video."
     )
     
@@ -126,6 +314,7 @@ class Audio(Media):
     )
     upload = models.FileField(
         upload_to=audio_dir_path,
+        validators=[validate_file_size],
         help_text="File containing uploaded audio."
     )
     
@@ -193,3 +382,45 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+    
+    
+class SiteReaction(models.Model):
+    """
+    Represents a reaction to a post/comment, by a custom user.
+    """
+    message = models.FileField(upload_to=reactions_dir_path, help_text="File containing message associated to reaction")
+    user  = models.ForeignKey(
+        CustomUser,
+        on_delete = models.CASCADE,
+        help_text="User who makes the reaction"
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete = models.CASCADE,
+        help_text="Associated post for the reaction."
+    )
+    comment = models.OneToOneField(
+        Comment,
+        on_delete = models.CASCADE,
+        help_text="Associated comment for the reaction."
+    )
+    ONE_STAR = 1
+    TWO_STAR = 2
+    THREE_STAR = 3
+    FOUR_STAR = 4
+    FIVE_STAR = 5
+    STAR_CATEGORY={
+        ONE_STAR:'Very bad post/comment',
+        TWO_STAR:'Bad post/comment',
+        THREE_STAR:'Good post/comment',
+        FOUR_STAR:'Impressive post/comment',
+        FIVE_STAR:'Outstanding post/comment'
+    }
+    num_star = models.IntegerField(
+        choices=STAR_CATEGORY,
+        default=1,
+        help_text="Number of stars for reaction."
+    )
+    
+    def __str__(self):
+        return f"Reaction to {self.post.title if self.post else self.comment.user.username} by {self.user.username}"

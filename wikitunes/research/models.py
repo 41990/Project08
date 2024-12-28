@@ -1,9 +1,16 @@
 from django.db import models
-from ..locations.models import Location
-from ..accounts.models import Account, CustomUser
-from ..forums.models import forum_data_desc_dir_path
-from ..tunes.models import BaseModel, SiteReaction
+from locations.models import Location
+from accounts.models import Account, CustomUser, validate_file_size
+from forums.models import forum_data_desc_dir_path
+from tunes.models import BaseModel
+from content.models import SiteReaction
+from django.core.exceptions import ValidationError
+from django.conf import settings
 
+
+def validate_file_size(file):
+    if file.size > settings.MAX_UPLOAD_SIZE:
+        raise ValidationError(f"The file size exceeds the maximum limit of {settings.MAX_UPLOAD_SIZE / (1024 * 1024)} MB.")
 
 class Event(BaseModel, SiteReaction):
     """
@@ -144,6 +151,7 @@ class Article(BaseModel, SiteReaction):
     )
     featured_image = models.ImageField(
         upload_to="articles/images/", 
+        validators=[validate_file_size],
         null=True, 
         blank=True,
         help_text="A main image for the article."
@@ -186,6 +194,7 @@ class Blog(BaseModel, SiteReaction):
     )
     cover_image = models.ImageField(
         upload_to="blogs/images/",
+        validators=[validate_file_size],
         null=True, 
         blank=True
     )

@@ -86,7 +86,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
     
-        'NAME':'wikitunes',
+        'NAME':'wikitune_DB',
         'USER':'postgres',
         'PASSWORD':'$jaCson09',
         'HOST':'localhost',
@@ -157,3 +157,16 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
+
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB
+
+
+MEDIA_ROOT = BASE_DIR / 'media'  # Directory to store uploaded files
+
+MEDIA_URL = '/media/'           # URL to access uploaded files
+
+
