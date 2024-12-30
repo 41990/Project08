@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.gis',
+    'corsheaders',
+    'mapwidgets',
+    'leaflet',
+    'rest_framework',
     'accounts',
     'analytics',
     'api',
@@ -48,7 +54,17 @@ INSTALLED_APPS = [
     'tunes',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -84,7 +100,7 @@ WSGI_APPLICATION = 'wikitunes.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.postgis',
     
         'NAME':'wikitune_DB',
         'USER':'postgres',
@@ -158,6 +174,8 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+AUTH_USER_MODEL = 'accounts.CustomUser'
+
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10 MB
@@ -169,4 +187,6 @@ MEDIA_ROOT = BASE_DIR / 'media'  # Directory to store uploaded files
 
 MEDIA_URL = '/media/'           # URL to access uploaded files
 
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', r'C:/OSGeo4W/bin/gdal309.dll')
 
+GEOS_LIBRARY_PATH = "C:/OSGeo4W/bin/geos_c.dll"

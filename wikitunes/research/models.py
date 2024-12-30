@@ -21,11 +21,11 @@ class Event(BaseModel, SiteReaction):
     
     title = models.CharField(max_length=100, help_text="Title of the event.")
     description = models.FileField(upload_to=forum_data_desc_dir_path, help_text="File describing the event content.")
-    owners = models.ManyToManyField('Account', related_name='events')
+    owners = models.ManyToManyField('accounts.Account', related_name='events')
     start_time = models.DateTimeField(help_text="Event start time.")
     end_time = models.DateTimeField(help_text="Event end time.")
     media = models.ForeignKey(
-        'Media',
+        'content.Media',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -144,7 +144,7 @@ class Article(BaseModel, SiteReaction):
     )
     published_date = models.DateTimeField(auto_now_add=True, help_text="When the article was published.")
     tags = models.ManyToManyField(
-        'Tag', 
+        'content.Tag', 
         related_name="articles", 
         blank=True,
         help_text="Keywords or tags for categorization."
@@ -184,10 +184,10 @@ class Blog(BaseModel, SiteReaction):
         related_name="blogs"
     )
     published_date = models.DateTimeField(auto_now_add=True)
-    tags = models.ManyToManyField('Tag', related_name="blogs", blank=True)
+    tags = models.ManyToManyField('content.Tag', related_name="blogs", blank=True)
     likes = models.IntegerField(default=0, help_text="Tracks the number of likes the blog has received.")
     comments = models.ManyToManyField(
-        'Comment', 
+        'content.Comment', 
         related_name="blogs", 
         blank=True,
         help_text="Allows users to comment on the blog post."

@@ -57,6 +57,16 @@ class CustomUser(AbstractUser):
     Represents a custom user with additional fields for address and country.
     Extends Django's AbstractUser for flexibility in user management.
     """
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='customuser_set',  # Custom related name
+        blank=True,
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='customuser_set',  # Custom related name
+        blank=True,
+    )
     email = models.EmailField(unique=True, help_text="Unique email address of the user.")
     address = models.CharField(max_length=50, help_text="User's address.")
     country = models.CharField(max_length=50, help_text="Country where the user resides.")

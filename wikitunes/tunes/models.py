@@ -77,7 +77,7 @@ class Privilege(BaseModel):
     owner = models.CharField(max_length=50, help_text="Who the privilege applies to.")
     title = models.CharField(max_length=50, help_text="Title of the privilege.")
     description = models.FileField(upload_to=privilege_dir_path, help_text="Description of the privilege.")
-    current_date = models.DateField(auto_now=True, help_text="Last updated date.")
+    pub_date = models.DateField(auto_now=True, help_text="Last updated date.")
     admin = models.ForeignKey(
         WikiAdmin,
         on_delete = models.CASCADE,
