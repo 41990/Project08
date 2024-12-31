@@ -74,6 +74,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',  # React development server
+]
+
 ROOT_URLCONF = 'wikitunes.urls'
 
 TEMPLATES = [
@@ -100,9 +104,9 @@ WSGI_APPLICATION = 'wikitunes.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgis',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
     
-        'NAME':'wikitune_DB',
+        'NAME':'gis',
         'USER':'postgres',
         'PASSWORD':'$jaCson09',
         'HOST':'localhost',

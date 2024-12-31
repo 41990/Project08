@@ -3,7 +3,7 @@ from django.db import models
 from content.models import acc_data_desc_dir_path
 from django.contrib.gis.db import models as gis_models
 
-class Location(models.Model):
+class Location(gis_models.Model):
     """
     Represents a geolocation associated to an account/custom user.
     """

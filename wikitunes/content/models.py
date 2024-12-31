@@ -424,3 +424,119 @@ class SiteReaction(models.Model):
     
     def __str__(self):
         return f"Reaction to {self.post.title if self.post else self.comment.user.username} by {self.user.username}"
+    
+    
+class SiteReport(models.Model):
+    """
+    Represents a report on a post/comment, by a custom user.
+    """
+    message = models.FileField(upload_to=reactions_dir_path, help_text="File containing message associated to user report")
+    user  = models.ForeignKey(
+        CustomUser,
+        on_delete = models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="User who makes the report"
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete = models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="Associated post for the report."
+    )
+    comment = models.OneToOneField(
+        Comment,
+        on_delete = models.CASCADE,
+        help_text="Associated comment for the report."
+    )
+    SPAM = 'Spam'
+    ABUSE = 'Abuse'
+    INAPPROPRIATE = 'Inappropriate'
+    OTHER = 'Other'
+    REPORT_CATEGORY={
+        SPAM:'Spam',
+        ABUSE:'Abuse',
+        INAPPROPRIATE:'Inappropriate',
+        OTHER:'Other'
+    }
+    category = models.CharField(
+        max_length=20,
+        choices=REPORT_CATEGORY,
+        default='Spam',
+        help_text="Category of the report."
+    )
+    
+    def __str__(self):
+        return f"Report on {self.post.title if self.post else self.comment.user.username} by {self.user.username}"
+    
+class SiteBookmark(models.Model):
+    """
+    Represents a bookmark on a post/comment, by a custom user.
+    """
+    user  = models.ForeignKey(
+        CustomUser,
+        on_delete = models.CASCADE,
+        help_text="User who makes the bookmark"
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete = models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="Associated post for the bookmark."
+    )
+    comment = models.OneToOneField(
+        Comment,
+        on_delete = models.CASCADE,
+        help_text="Associated comment for the bookmark."
+    )
+    
+    def __str__(self):
+        return f"Bookmark on {self.post.title if self.post else self.comment.user.username} by {self.user.username}"
+    
+    
+class SiteEmoji(models.Model):
+    """
+    Represents an emoji reaction to a post/comment, by a custom user.
+    """
+    user  = models.ForeignKey(
+        CustomUser,
+        on_delete = models.CASCADE,
+        help_text="User who makes the emoji reaction"
+    )
+    post = models.ForeignKey(
+        Post,
+        on_delete = models.CASCADE,
+        null=True,
+        blank=True,
+        help_text="Associated post for the emoji reaction."
+    )
+    comment = models.OneToOneField(
+        Comment,
+        on_delete = models.CASCADE,
+        help_text="Associated comment for the emoji reaction."
+    )
+    LIKE = 'Like'
+    LOVE = 'Love'
+    HAHA = 'Haha'
+    WOW = 'Wow'
+    SAD = 'Sad'
+    ANGRY = 'Angry'
+    EMOJI_CATEGORY={
+        LIKE:'Like',
+        LOVE:'Love',
+        HAHA:'Haha',
+        WOW:'Wow',
+        SAD:'Sad',
+        ANGRY:'Angry'
+    }
+    emoji = models.CharField(
+        max_length=20,
+        choices=EMOJI_CATEGORY,
+        default='Like',
+        help_text="Emoji reaction to the post/comment."
+    )
+    
+    def __str__(self):
+        return f"Emoji reaction to {self.post.title if self.post else self.comment.user.username} by {self.user.username}"

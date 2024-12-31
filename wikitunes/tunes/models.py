@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser
 from datetime import datetime
 import uuid
 from django.db import models
@@ -39,7 +40,7 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-class WikiAdmin(models.Model):
+class WikiAdmin(AbstractUser):
     """
     Represents the present application administrator who also possesses an account.
     """
@@ -75,6 +76,7 @@ class Privilege(BaseModel):
     Represents the privileges given to either the admin or account owner or custom user within the application.
     """
     owner = models.CharField(max_length=50, help_text="Who the privilege applies to.")
+    permission = models.ManyToManyField('auth.Permission', help_text="Permissions associated with the privilege.")
     title = models.CharField(max_length=50, help_text="Title of the privilege.")
     description = models.FileField(upload_to=privilege_dir_path, help_text="Description of the privilege.")
     pub_date = models.DateField(auto_now=True, help_text="Last updated date.")
