@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from accounts.models import CustomUser
+from accounts.models import Visitor
 from content.models import Post
 from forums.models import Forum
 from research.models import Blog, Event, Article
@@ -51,7 +51,7 @@ class  BaseAnalyticsModel(models.Model):
     )
     
     user = models.ForeignKey(
-        CustomUser,
+        Visitor,
         on_delete=models.CASCADE,
         null=True,
         blank=True,

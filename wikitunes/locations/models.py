@@ -5,7 +5,7 @@ from django.contrib.gis.db import models as gis_models
 
 class Location(gis_models.Model):
     """
-    Represents a geolocation associated to an account/custom user.
+    Represents a geolocation associated to an account, event or forum.
     """
     name = models.CharField(max_length=255, help_text="name of location")
     description = models.FileField(upload_to=acc_data_desc_dir_path, help_text="Location describing the post content.")

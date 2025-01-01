@@ -6,7 +6,7 @@ from django.db.models import Avg
 from django.conf import settings
 from django.utils.text import slugify
 
-from accounts.models import Account, CustomUser, img_dir_path, text_dir_path
+from accounts.models import Account, Visitor, img_dir_path, text_dir_path
 
 
 def dynamic_dir_path(instance, filename, folder):
@@ -185,7 +185,7 @@ class Comment(BaseModel, ReactionMixin):
     message = models.FileField(upload_to=user_comment_dir_path, help_text="Content of the comment.")
     pub_date = models.DateTimeField(auto_now=True, help_text="Date when the comment was published.")
     user = models.ForeignKey(
-        CustomUser,
+        Visitor,
         on_delete = models.CASCADE,
         help_text="User who made the comment."
     )
@@ -390,7 +390,7 @@ class SiteReaction(models.Model):
     """
     message = models.FileField(upload_to=reactions_dir_path, help_text="File containing message associated to reaction")
     user  = models.ForeignKey(
-        CustomUser,
+        Visitor,
         on_delete = models.CASCADE,
         help_text="User who makes the reaction"
     )
@@ -432,7 +432,7 @@ class SiteReport(models.Model):
     """
     message = models.FileField(upload_to=reactions_dir_path, help_text="File containing message associated to user report")
     user  = models.ForeignKey(
-        CustomUser,
+        Visitor,
         on_delete = models.CASCADE,
         null=True,
         blank=True,
@@ -475,7 +475,7 @@ class SiteBookmark(models.Model):
     Represents a bookmark on a post/comment, by a custom user.
     """
     user  = models.ForeignKey(
-        CustomUser,
+        Visitor,
         on_delete = models.CASCADE,
         help_text="User who makes the bookmark"
     )
@@ -501,7 +501,7 @@ class SiteEmoji(models.Model):
     Represents an emoji reaction to a post/comment, by a custom user.
     """
     user  = models.ForeignKey(
-        CustomUser,
+        Visitor,
         on_delete = models.CASCADE,
         help_text="User who makes the emoji reaction"
     )

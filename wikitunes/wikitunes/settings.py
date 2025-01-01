@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -122,7 +123,6 @@ DATABASES = {
 #https://docs.djangoproject.com/en/5.0/topics/auth/passwords/#password-management-in-django
 
 PASSWORD_HASHERS = [
-    "wikitunes.hashers.WikiPBKDF2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
     "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
     "django.contrib.auth.hashers.Argon2PasswordHasher",
@@ -178,7 +178,7 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'accounts.CustomUser'
+AUTH_USER_MODEL = 'accounts.Account'
 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB
 
@@ -194,3 +194,20 @@ MEDIA_URL = '/media/'           # URL to access uploaded files
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', r'C:/OSGeo4W/bin/gdal309.dll')
 
 GEOS_LIBRARY_PATH = "C:/OSGeo4W/bin/geos_c.dll"
+
+JAZZMIN_SETTINGS = {
+    # title of the window (Will default to current_admin_site.site_title if absent or None)
+    "site_title": "Wikitunes Admin",
+    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_header": "Wikitunes",
+
+    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_brand": "Wikitunes",
+
+    # Logo to use for your site, must be present in static files, used for brand on top left
+    "site_logo": None,
+    # Copyright on the footer
+    "copyright": "Wikitunes Co.ltd",
+        # Whether to show the UI customizer on the sidebar
+    "show_ui_builder": True,
+}

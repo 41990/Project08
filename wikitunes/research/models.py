@@ -1,6 +1,6 @@
 from django.db import models
 from locations.models import Location
-from accounts.models import Account, CustomUser, validate_file_size
+from accounts.models import Account, Visitor, validate_file_size
 from forums.models import forum_data_desc_dir_path
 from tunes.models import BaseModel
 from content.models import SiteReaction
@@ -49,7 +49,7 @@ class SearchHistory(models.Model):
     ]
 
     user = models.ForeignKey(
-        CustomUser, 
+        Visitor, 
         on_delete=models.CASCADE, 
         help_text="The user who performed the search."
     )

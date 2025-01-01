@@ -1,9 +1,9 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser
 from datetime import datetime
 import uuid
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
-from accounts.models import Account, CustomUser
+from accounts.models import Account, Visitor
 
 def privilege_dir_path(instance, filename):
     return f"privileges/docs/{datetime.now().strftime('%Y/%m/%d')}/{filename}"
@@ -40,13 +40,12 @@ class BaseModel(models.Model):
     class Meta:
         abstract = True
 
-class WikiAdmin(AbstractUser):
+class WikiAdmin(AbstractBaseUser):
     """
     Represents the present application administrator who also possesses an account.
     """
-    admin_names = models.CharField(max_length=50, help_text="Admin names.")
     password = models.CharField(max_length=254, help_text="Hashed administrator password.")
-    current_date = models.DateField(auto_now=True, help_text="Last updated date.")
+    can_validate_content = models.BooleanField(default=True)
     account = models.OneToOneField(
         Account,
         on_delete = models.CASCADE,
@@ -54,7 +53,7 @@ class WikiAdmin(AbstractUser):
     )
     
     def __str__(self):
-        return "admin: %s" %self.admin_names
+        return f"admin: {self.account.user.username}"
         
     def save(self, *args, **kwargs):
         """
@@ -77,7 +76,6 @@ class Privilege(BaseModel):
     """
     owner = models.CharField(max_length=50, help_text="Who the privilege applies to.")
     permission = models.ManyToManyField('auth.Permission', help_text="Permissions associated with the privilege.")
-    title = models.CharField(max_length=50, help_text="Title of the privilege.")
     description = models.FileField(upload_to=privilege_dir_path, help_text="Description of the privilege.")
     pub_date = models.DateField(auto_now=True, help_text="Last updated date.")
     admin = models.ForeignKey(
@@ -89,7 +87,7 @@ class Privilege(BaseModel):
         help_text="Admin to which privilege applies if applicable."
     )
     user = models.ForeignKey(
-        CustomUser,
+        Visitor,
         on_delete = models.CASCADE,
         null = True, 
         blank=True,

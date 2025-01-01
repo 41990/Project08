@@ -52,34 +52,30 @@ def roles_dir_path(instance, filename):
     return f"roles/docs/{datetime.now().strftime('%Y/%m/%d')}/{filename}"
 
 
-class CustomUser(AbstractUser):
+class Visitor(models.Model):
     """
-    Represents a custom user with additional fields for address and country.
+    Represents a visitor with additional fields for address and country.
     Extends Django's AbstractUser for flexibility in user management.
     """
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='customuser_set',  # Custom related name
-        blank=True,
-    )
     user_permissions = models.ManyToManyField(
         'auth.Permission',
-        related_name='customuser_set',  # Custom related name
+        related_name='visitor_set',  # Custom related name
         blank=True,
     )
-    email = models.EmailField(unique=True, help_text="Unique email address of the user.")
-    address = models.CharField(max_length=50, help_text="User's address.")
-    country = models.CharField(max_length=50, help_text="Country where the user resides.")
-    
-    def __str__(self):
-        return self.username
+    username = models.CharField(max_length=150, blank=True, null=True)
+    ip_address = models.GenericIPAddressField(blank=True, null=True)  # For tracking
+    session_id = models.CharField(max_length=255, blank=True, null=True)  # Unique session
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-class Account(models.Model):
+    def __str__(self):
+        return self.username or f"Anonymous Visitor ({self.ip_address})"
+    
+
+class Account(AbstractUser):
     """
     Represents a user account with additional metadata like location, email, and registration IP.
     """
-    account_names = models.CharField(max_length=50, help_text="Name of the account holder.")
-    password = models.CharField(max_length=254, help_text="Hashed password for the account.")
     account_location = models.CharField(max_length=50, help_text="Physical location associated with the account.")
     profile_picture = models.ImageField(
         upload_to=img_dir_path,
@@ -96,16 +92,14 @@ class Account(models.Model):
         unpack_ipv4 = False,
         help_text="Registration device IP address."
     )
+    date_of_birth = models.DateField()
+    is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
     start_date = models.DateTimeField(auto_now=True, help_text="The date and time when the account was created.")
     current_date = models.DateField(auto_now=True, help_text="Last updated date.")
-    user = models.OneToOneField(
-        CustomUser,
-        on_delete = models.CASCADE,
-        help_text="Associated custom user."
-    )
     
     def __str__(self):
-        return f"Account: {self.account_names}"
+        return f"Account: {self.username}"
     
     def save(self, *args, **kwargs):
         """
@@ -120,9 +114,25 @@ class Account(models.Model):
         Verify the provided password against the stored hashed password.
         """
         return check_password(raw_password, self.password)
+    
+    def has_perm(self, perm, obj=None):
+        "Does the user have a specific permission?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    def has_module_perms(self, app_label):
+        "Does the user have permissions to view the app `app_label`?"
+        # Simplest possible answer: Yes, always
+        return True
+
+    @property
+    def is_staff(self):
+        "Is the user a member of staff?"
+        # Simplest possible answer: All admins are staff
+        return self.is_admin
 
 
-class Role(models.Model):
+class SocialRole(models.Model):
     """
     Represents a role associated with an account, containing categories.
     """

@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils import timezone
 
-from accounts.models import CustomUser
+from accounts.models import Visitor
 
 class APIRequest(models.Model):
     """
@@ -41,7 +41,7 @@ class APIKey(models.Model):
     Stores API keys and associated metadata for access control.
     """
     key = models.CharField(max_length=64, unique=True, help_text="Unique API key.")
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, help_text="User associated with the API key.")
+    user = models.ForeignKey(Visitor, on_delete=models.CASCADE, help_text="User associated with the API key.")
     created_at = models.DateTimeField(default=timezone.now, help_text="Timestamp when the API key was created.")
     expired_at = models.DateTimeField(blank=True, null=True, help_text="Timestamp when the API key will expire.")
     is_active = models.BooleanField(default=True, help_text="Whether the API key is active.")
