@@ -72,7 +72,7 @@ class Visitor(models.Model):
         return self.username or f"Anonymous Visitor ({self.ip_address})"
     
 
-class Account(AbstractUser):
+class Account(User):
     """
     Represents a user account with additional metadata like location, email, and registration IP.
     """
@@ -95,9 +95,12 @@ class Account(AbstractUser):
     date_of_birth = models.DateField()
     is_active = models.BooleanField(default=True)
     is_admin = models.BooleanField(default=False)
-    start_date = models.DateTimeField(auto_now=True, help_text="The date and time when the account was created.")
     current_date = models.DateField(auto_now=True, help_text="Last updated date.")
     
+    class Meta:
+        proxy = True
+        
+        
     def __str__(self):
         return f"Account: {self.username}"
     

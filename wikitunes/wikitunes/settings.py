@@ -196,18 +196,32 @@ GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', r'C:/OSGeo4W/bin/gdal309.dll'
 GEOS_LIBRARY_PATH = "C:/OSGeo4W/bin/geos_c.dll"
 
 JAZZMIN_SETTINGS = {
-    # title of the window (Will default to current_admin_site.site_title if absent or None)
-    "site_title": "Wikitunes Admin",
-    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
-    "site_header": "Wikitunes",
-
-    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
-    "site_brand": "Wikitunes",
-
-    # Logo to use for your site, must be present in static files, used for brand on top left
-    "site_logo": None,
-    # Copyright on the footer
-    "copyright": "Wikitunes Co.ltd",
-        # Whether to show the UI customizer on the sidebar
-    "show_ui_builder": True,
+    "site_title": "WikiTunes Admin",
+    "site_header": "WikiTunes Management",
+    "welcome_sign": "Welcome to the WikiTunes Admin Dashboard",
+    "site_logo": "static/logo.png",  # Customize with your logo
+    "login_logo": "static/login_logo.png",
+    "topmenu_links": [
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"model": "accounts.Account"},
+        {"app": "tunes"},
+    ],
+    "icons": {
+        "accounts.Account": "fas fa-users",
+        "tunes.WikiAdmin": "fas fa-user-shield",
+        "content.Post": "fas fa-file-alt",
+        "forums.Forum": "fas fa-comments",
+    },
+    "order_with_respect_to": ["tunes", "accounts", "content", "forums"],
+    "custom_links": {
+        "tunes": [
+            {
+                "name": "Validate Content",
+                "url": "validate_content",
+                "icon": "fas fa-check-circle",
+                "permissions": ["tunes.validate_content"],
+            },
+        ],
+    },
+    "changeform_format": "collapsible",  # Makes large forms easier to handle
 }
